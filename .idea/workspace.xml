@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="198e82ef-acdd-4b6f-b3f7-991a5271e503" name="Default Changelist" comment="" />
+    <list default="true" id="198e82ef-acdd-4b6f-b3f7-991a5271e503" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Keypoints_All.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/clean_data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/concat_JSON.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/AIMove AGV Project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AIMove AGV Project.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/get_keypoints.py" beforeDir="false" afterPath="$PROJECT_DIR$/get_OP_keypoints.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/initialize_openpose.py" beforeDir="false" afterPath="$PROJECT_DIR$/initialize_OP.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/normalize_data.py" beforeDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,11 +30,20 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1Tpn38u5jDE8IHOP46uWKiLuvp6" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -44,7 +65,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.get_keypoints">
+  <component name="RunManager" selected="Python.normalize_data">
     <configuration name="get_depth" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="AIMove AGV Project" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -80,7 +101,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/get_keypoints.py" />
+      <option name="SCRIPT_NAME" value="D:\Documents\AIMove\Project\AIMove-AGV-Project\get_OP_keypoints.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -102,7 +123,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/normalize_data.py" />
+      <option name="SCRIPT_NAME" value="D:\Documents\AIMove\Project\AIMove-AGV-Project\concat_JSON.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -113,8 +134,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.get_keypoints" />
         <item itemvalue="Python.normalize_data" />
+        <item itemvalue="Python.get_keypoints" />
         <item itemvalue="Python.get_depth" />
       </list>
     </recent_temporary>
@@ -129,8 +150,26 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1574165702040</updated>
+      <workItem from="1574335711980" duration="3848000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -142,5 +181,8 @@
         </breakpoint>
       </default-breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/AIMove_AGV_Project$normalize_data.coverage" NAME="normalize_data Coverage Results" MODIFIED="1574339168017" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
