@@ -5,7 +5,7 @@ import json
 from initialize_OP import *
 
 # Gesture folder loacation
-folderLocation = '/home/aimove/Desktop/Glass_Blowing_New/Tighten_the_base_of_the_glass_with_the_pliers/'
+folderLocation = '/home/paperspace/Desktop/Glass_Blowing_New/New_Gesture4/'
 # Sub folder number starts at
 foldNum_start = 1
 
