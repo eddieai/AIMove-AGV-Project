@@ -4,21 +4,21 @@ import os
 import json
 from initialize_OP import *
 
-# Gesture folder loacation
-folderLocation = '/home/paperspace/Desktop/recording_png/speed_up/'
-# Sub folder number starts at
-foldNum_start = 1
-
-
 # Starting OpenPose
 params['number_people_max'] = 1
 opWrapper = op.WrapperPython()
 opWrapper.configure(params)
 opWrapper.start()
 
+
+# Gesture folder loacation
+folderLocation = '/home/paperspace/Desktop/recording_png/speed_up/'
+# Sub folder number starts at
+foldNum_start = 1
 foldNum = foldNum_start
 frameNum = 1
 keypoints = []
+
 
 while True:
     # Read frames on directory
