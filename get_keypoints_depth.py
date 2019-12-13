@@ -17,8 +17,10 @@ opWrapper.start()
 
 # Gesture folder loacation
 folderLocation = '/home/paperspace/Desktop/recording_png/hello/'
+gesture = folderLocation[folderLocation[:-1].rfind('/')+1:-1]
 # Sub folder number starts at
 foldNum_start = 1
+
 foldNum = foldNum_start
 frameNum = 1
 keypoints = []
@@ -34,9 +36,8 @@ while True:
                            key=lambda x: int(re.match(r'.*?(\d{1,3})\.png$', x).group(1)))
 
     img = cv2.imread(imgPath[frameNum-1])
-    print((imgPath[frameNum-1]))
     img_depth = cv2.imread(imgPath_depth[frameNum-1])
-    print((imgPath_depth[frameNum - 1]))
+    print('Frame path: \t\t', imgPath[frameNum-1], '\t\t', imgPath_depth[frameNum - 1])
 
     plt.clf()
     plt.subplot(2,1,1)
@@ -57,7 +58,7 @@ while True:
     datum.cvInputData = img
     opWrapper.emplaceAndPop([datum])
     opData = datum.poseKeypoints
-    print('Keypoints shape of Folder %d Frame %d: ' % (foldNum, frameNum), datum.poseKeypoints.shape, '\n')
+    print('OpenPose keypoints shape of Folder %d Frame %d: ' % (foldNum, frameNum), datum.poseKeypoints.shape, '\n')
 
     for person in range(opData.shape[0]):
         for joint in range(opData.shape[1]):
@@ -108,6 +109,5 @@ while True:
             print('Sub folder %d or %s not found' % (foldNum, str(foldNum)+'D'))
             break
 
-
-with open('Keypoints.Gesture_%s.SubFolder_%d-%d.json' % (folderLocation[folderLocation[:-1].rfind('/')+1:-1], foldNum_start, foldNum-1), 'w') as json_file:
+with open('Keypoints.Gesture_%s.SubFolder_%d-%d.json' % (gesture, foldNum_start, foldNum-1), 'w') as json_file:
     json.dump(keypoints, json_file)
