@@ -1,19 +1,20 @@
 import cv2
 import glob
 import json
+import os
+import re
 import numpy as np
 import matplotlib.pyplot as plt
-from initialize_OP import *
 
+from initialize_OP import *
 # Starting OpenPose
 params['number_people_max'] = 1
 opWrapper = op.WrapperPython()
 opWrapper.configure(params)
 opWrapper.start()
 
-
 # Gesture folder loacation
-folderLocation = '/home/paperspace/Desktop/recording_png/speed_up/'
+folderLocation = 'D:/Documents/AIMove/Project/Dataset/ASTI_labo/recording_png_0/hello/'
 # Sub folder number starts at
 foldNum_start = 1
 foldNum = foldNum_start
@@ -25,16 +26,10 @@ plt.figure()
 
 while True:
     # Read frames on directory
-    imgPath = glob.glob(folderLocation+str(foldNum)+'/*.png')
-    imgPath_depth = glob.glob(folderLocation + str(foldNum) + 'D/*.png')
-    if (frameNum>=len(imgPath)):
-        foldNum += 1
-        frameNum = 1
-        if not (os.path.isdir(folderLocation + str(foldNum)) and os.path.isdir(folderLocation + str(foldNum) + 'D')):
-            print('Sub folder %d or %s not found' % (foldNum, str(foldNum)+'D'))
-            break
-        imgPath = glob.glob(folderLocation+str(foldNum)+'/*.png')
-        imgPath_depth = glob.glob(folderLocation + str(foldNum) + 'D/*.png')
+    imgPath = sorted(glob.glob(folderLocation + str(foldNum) + '/*.png'),
+                     key=lambda x: int(re.match(r'.*?(\d{1,3})\.png$', x).group(1)))
+    imgPath_depth = sorted(glob.glob(folderLocation + str(foldNum) + 'D/*.png'),
+                           key=lambda x: int(re.match(r'.*?(\d{1,3})\.png$', x).group(1)))
 
     img = cv2.imread(imgPath[frameNum-1])
     img_depth = cv2.imread(imgPath_depth[frameNum-1])
@@ -102,6 +97,12 @@ while True:
     plt.show()
 
     frameNum += 1
+    if (frameNum>=len(imgPath)):
+        foldNum += 1
+        frameNum = 1
+        if not (os.path.isdir(folderLocation + str(foldNum)) and os.path.isdir(folderLocation + str(foldNum) + 'D')):
+            print('Sub folder %d or %s not found' % (foldNum, str(foldNum)+'D'))
+            break
 
 
 with open('Keypoints.Gesture_%s.SubFolder_%d-%d.json' % (folderLocation[folderLocation[:-1].rfind('/')+1:-1], foldNum_start, foldNum-1), 'w') as json_file:
