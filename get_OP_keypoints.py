@@ -5,6 +5,8 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
 
 from initialize_OP import *
 # Starting OpenPose
@@ -14,7 +16,7 @@ opWrapper.configure(params)
 opWrapper.start()
 
 # Gesture folder loacation
-folderLocation = 'D:/Documents/AIMove/Project/Dataset/ASTI_labo/recording_png_0/hello/'
+folderLocation = '/home/paperspace/Desktop/recording_png/hello/'
 # Sub folder number starts at
 foldNum_start = 1
 foldNum = foldNum_start
@@ -22,7 +24,7 @@ frameNum = 1
 keypoints = []
 
 plt.ion()
-plt.figure()
+plt.figure(figsize=(20, 30))
 
 while True:
     # Read frames on directory
@@ -32,7 +34,9 @@ while True:
                            key=lambda x: int(re.match(r'.*?(\d{1,3})\.png$', x).group(1)))
 
     img = cv2.imread(imgPath[frameNum-1])
+    print((imgPath[frameNum-1]))
     img_depth = cv2.imread(imgPath_depth[frameNum-1])
+    print((imgPath_depth[frameNum - 1]))
 
     plt.clf()
     plt.subplot(2,1,1)
@@ -53,7 +57,7 @@ while True:
     datum.cvInputData = img
     opWrapper.emplaceAndPop([datum])
     opData = datum.poseKeypoints
-    print('Keypoints shape of Folder %d Frame %d: ' % (foldNum, frameNum), datum.poseKeypoints.shape)
+    print('Keypoints shape of Folder %d Frame %d: ' % (foldNum, frameNum), datum.poseKeypoints.shape, '\n')
 
     for person in range(opData.shape[0]):
         for joint in range(opData.shape[1]):
@@ -86,14 +90,14 @@ while True:
     plt.subplot(2, 1, 1)
     plt.scatter(X[1:8], Y[1:8], c='white')
     for i in range(1,8):
-        plt.text(X[i], Y[i], "%.02f" % Probability[i], fontdict=dict(color='white', size='10'), bbox=dict(fill=False, edgecolor='red', linewidth=1))
+        plt.text(X[i], Y[i], "%.02f" % Probability[i], fontdict=dict(color='white', size='15'), bbox=dict(fill=False, edgecolor='red', linewidth=1))
 
     plt.subplot(2, 1, 2)
     plt.scatter(X[1:8], Y[1:8], c='white')
     for i in range(1,8):
-        plt.text(X[i], Y[i], "%.02f" % Depth[i], fontdict=dict(color='white', size='10'), bbox=dict(fill=False, edgecolor='red', linewidth=1))
+        plt.text(X[i], Y[i], "%.02f" % Depth[i], fontdict=dict(color='black', size='15'), bbox=dict(fill=False, edgecolor='red', linewidth=1))
 
-    plt.waitforbuttonpress()
+    plt.waitforbuttonpress(0.01)
     plt.show()
 
     frameNum += 1
