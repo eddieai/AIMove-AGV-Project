@@ -1,7 +1,8 @@
 import cv2
 import glob
-import os
 import json
+import numpy as np
+import matplotlib.pyplot as plt
 from initialize_OP import *
 
 # Starting OpenPose
@@ -19,6 +20,8 @@ foldNum = foldNum_start
 frameNum = 1
 keypoints = []
 
+plt.ion()
+plt.figure()
 
 while True:
     # Read frames on directory
@@ -35,10 +38,22 @@ while True:
 
     img = cv2.imread(imgPath[frameNum-1])
     img_depth = cv2.imread(imgPath_depth[frameNum-1])
+
+    plt.clf()
+    plt.subplot(2,1,1)
+    plt.imshow(img[..., ::-1])
+    plt.subplot(2,1,2)
+    plt.imshow(img_depth[..., ::-1])
+
     img_depth = cv2.cvtColor(img_depth, cv2.COLOR_BGR2GRAY)
     img_depth = img_depth / 255
 
     # Process and display images
+    X = np.empty((0))
+    Y = np.empty((0))
+    Depth = np.empty((0))
+    Probability = np.empty((0))
+
     datum = op.Datum()
     datum.cvInputData = img
     opWrapper.emplaceAndPop([datum])
@@ -50,7 +65,12 @@ while True:
             x = opData[person][joint][0].item()
             y = opData[person][joint][1].item()
             probability = opData[person][joint][2].item()
-            depth = img_depth[min(479, round(y)), min(639, round(x))]
+            depth = img_depth[min(img.shape[0]-1, round(y)), min(img.shape[1]-1, round(x))]
+
+            X = np.append(X, min(img_depth.shape[1] - 1, round(x)))
+            Y = np.append(Y, min(img_depth.shape[0] - 1, round(y)))
+            Probability = np.append(Probability, probability)
+            Depth = np.append(Depth, depth)
 
             keypoints.append({
                 'Sub folder No.': foldNum,
@@ -67,6 +87,19 @@ while True:
         cv2.imshow("OpenPose 1.5.0 - Tutorial Python API", datum.cvOutputData)
         key = cv2.waitKey(15)
         if key == 27: break
+
+    plt.subplot(2, 1, 1)
+    plt.scatter(X[1:8], Y[1:8], c='white')
+    for i in range(1,8):
+        plt.text(X[i], Y[i], "%.02f" % Probability[i], fontdict=dict(color='white', size='10'), bbox=dict(fill=False, edgecolor='red', linewidth=1))
+
+    plt.subplot(2, 1, 2)
+    plt.scatter(X[1:8], Y[1:8], c='white')
+    for i in range(1,8):
+        plt.text(X[i], Y[i], "%.02f" % Depth[i], fontdict=dict(color='white', size='10'), bbox=dict(fill=False, edgecolor='red', linewidth=1))
+
+    plt.waitforbuttonpress()
+    plt.show()
 
     frameNum += 1
 
