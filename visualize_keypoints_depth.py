@@ -10,10 +10,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Gesture folder loacation
-folderLocation = '../Dataset/ASTI_labo/recording_png/right/'
+folderLocation = '../Dataset/ASTI_labo/recording_png/hello/'
 gesture = folderLocation[folderLocation[:-1].rfind('/')+1:-1]
 # Sub folder number starts at
-foldNum_start = 15
+foldNum_start = 1
 
 foldNum = foldNum_start
 frameNum = 1
@@ -89,11 +89,11 @@ while True:
     for i in range(1,8):
         plt.text(X[i], Y[i], "%.02f" % Depth[i], fontdict=dict(color='black', size='10'), bbox=dict(fill=False, edgecolor='red', linewidth=1))
 
-    plt.waitforbuttonpress(0.01)
+    plt.waitforbuttonpress()
     plt.show()
 
     frameNum += 1
-    if (frameNum>=len(imgPath)):
+    if (frameNum>len(imgPath)):
         foldNum += 1
         frameNum = 1
         if not (os.path.isdir(folderLocation + str(foldNum)) and os.path.isdir(folderLocation + str(foldNum) + 'D')):

@@ -102,7 +102,7 @@ while True:
     plt.show()
 
     frameNum += 1
-    if (frameNum>=len(imgPath)):
+    if (frameNum>len(imgPath)):
         foldNum += 1
         frameNum = 1
         if not (os.path.isdir(folderLocation + str(foldNum)) and os.path.isdir(folderLocation + str(foldNum) + 'D')):
