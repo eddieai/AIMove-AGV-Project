@@ -22,5 +22,5 @@ for gesture in gesture_list:
 gesture_index = pd.DataFrame([[_] for _ in range(1, len(gesture_list)+1)], index=gesture_list, columns=['Gesture index'])
 print('\n', gesture_index)
 
-gesture_index.to_json('Gesture_index.json', orient='split')
+gesture_index.to_json('Gesture_index.json', orient='columns')
 keypoints_all.to_json('Keypoints_All.json', orient='records')
