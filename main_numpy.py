@@ -9,7 +9,7 @@ import csv
 from tslearn.metrics import dtw
 import matplotlib.pyplot as plt
 import pyrealsense2 as rs
-# import pandas as pd
+import pandas as pd
 from time import time
 from itertools import combinations
 import warnings
@@ -184,24 +184,27 @@ try:
 
             # DTW
 
-            # = genfromtxt('dtw_data.csv', delimiter='"')
-            dtw_train_data = list(csv.reader(open('/home/aimove/Desktop/AIMove AGV Project/code/dtw_data.csv')))
+
+            dtw_train_csv = list(csv.reader(open('/home/aimove/Desktop/AIMove AGV Project/AIMove-AGV-Project/dtw_data.csv')))
+            dtw_train_data = []
+            for row in dtw_train_csv:
+                nwrow = []
+                for r in row:
+                    nwrow.append(eval(r))
+                dtw_train_data.append(nwrow)
             dtw_train_data = np.array(dtw_train_data)
-            #print(dtw_train_data)
             dist = np.empty(7)
             for i in range(7):
                 dist[i] = dtw(np.array(dtw_train_data[i]), data_window_distance)
-            dtw_pred = np.argmin(dist) + 1
-            print(dtw_pred)
+            dtw_pred = np.argmin(dist)
 
+            gesture_index= ["1_START", "2_RIGHT","3_LEFT", "4_SPEED-DOWN", "5_SPEED-UP", "6_CONFIRMATION", "7_STOP"]
+            print(gesture_index[dtw_pred])
 
             # Update variable iteration of frames
             frame_iter = max_frame_iter - 1
             # Delete first keypoints (first frame of the dataframe)
             data_window = data_window[1:, :, :]
-
-
-
 
 
 finally:
