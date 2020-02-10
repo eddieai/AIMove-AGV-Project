@@ -7,6 +7,7 @@ import numpy as np
 from numpy import genfromtxt
 import csv
 from tslearn.metrics import dtw
+from hmmlearn import hmm
 import matplotlib.pyplot as plt
 import pyrealsense2 as rs
 import pandas as pd
@@ -38,11 +39,30 @@ opWrapper = op.WrapperPython()
 opWrapper.configure(params)
 opWrapper.start()
 
+# List of Gestures
+gesture_index = ["1_START", "2_RIGHT", "3_LEFT", "4_SPEED-DOWN", "5_SPEED-UP", "6_CONFIRMATION", "7_STOP"]
+
+# Read HMM trained model parameters from JSON
+with open('hmm_jackknife_full_trained_param.json', 'r') as json_file:
+    trained_param = json.load(json_file)
+
+# Recover HMM models from HMM trained model parameters
+hmm_model = []
+for i in range(7):
+    hmm_model.append(hmm.GaussianHMM(n_components=3, covariance_type='full'))
+    hmm_model[-1].startprob_ = np.array(trained_param['startprob'][i])
+    hmm_model[-1].transmat_ = np.array(trained_param['transmat'][i])
+    hmm_model[-1].means_ = np.array(trained_param['means'][i])
+    hmm_model[-1].covars_ = np.array(trained_param['covars'][i])
+    hmm_model[-1].n_features = 21
+
 # Initialize numpy matrix of result
 data_window = np.zeros((0, 7, 4))
 
 # Number of time lenght (defined pas fps)
 max_frame_iter = 90
+# Number of frame slider
+frame_slide = 45
 
 plt.ion()
 fig = plt.figure()
@@ -65,7 +85,45 @@ def depth_cleaned(data_window, iter = 1):
     return data_window
 
 
+def dtw_classifier(data_window_distance):
 
+    dtw_train_csv = list(csv.reader(open('/home/aimove/Desktop/AIMove AGV Project/AIMove-AGV-Project/dtw_data.csv')))
+    dtw_train_data = []
+    for row in dtw_train_csv:
+        nwrow = []
+        for r in row:
+            nwrow.append(eval(r))
+        dtw_train_data.append(nwrow)
+    dtw_train_data = np.array(dtw_train_data)
+    dist = np.empty(7)
+    for i in range(7):
+        dist[i] = dtw(np.array(dtw_train_data[i]), data_window_distance)
+    dtw_pred = np.argmin(dist)
+
+    print(gesture_index[dtw_pred])
+    return ()
+
+
+def hmm_classifier(data_window_distance):
+
+    start_time = time()
+
+    score = np.empty(7)
+    for k in range(7):
+        try:
+            score[k] = hmm_model[k].score(data_window_distance, lengths=[len(data_window_distance)])
+        except:
+            score[k] = -99999
+
+    predict_idx = np.argmax(score) + 1
+    predict = gesture_index[predict_idx]
+
+    end_time = time()
+
+    print(score)
+    print(predict)
+
+    return
 
 try:
     # Initialize variable iteration of frames
@@ -120,7 +178,7 @@ try:
         Depth = np.empty((0))
         Probability = np.empty((0))
 
-        data_joint = np.zeros((0, 4))
+        data_joint = np.empty((0, 4))
         for joint in range(1, 8):
             x = opData[0][joint][0].item()
             y = opData[0][joint][1].item()
@@ -161,13 +219,15 @@ try:
 
         if frame_iter == max_frame_iter:
             # Create DataFrame of keypoints
-            print('data window shape:', data_window.shape)
+            # print('data window shape:', data_window.shape)
             end_time = time()
             run_time = end_time - start_time
             print('run time', run_time)
 
             data_window = depth_cleaned(data_window, iter=5)
-            data_window_distance = np.empty([max_frame_iter,1])
+            # data_window_distance = np.empty([max_frame_iter,1])
+            data_window_distance = np.empty([max_frame_iter,0])
+
 
             for pair in list(combinations(np.arange(0,7), 2)):
                 x1 = data_window[:, pair[0], 0]
@@ -177,34 +237,25 @@ try:
                 depth1 = data_window[:, pair[0], 3]
                 depth2 = data_window[:, pair[1], 3]
                 distance = np.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (depth1 - depth2)**2)
-                data_window_distance = np.hstack((data_window_distance, distance.reshape(1,max_frame_iter).T))
+                # data_window_distance = np.hstack((data_window_distance, distance.reshape(1,max_frame_iter).T))
+                data_window_distance = np.hstack((data_window_distance, distance.reshape(max_frame_iter, 1)))
 
-            data_window_distance = data_window_distance[:,1:] / np.max(data_window_distance[:,1:])
-           # print(data_window_distance)
+            # data_window_distance = data_window_distance[:,1:] / np.max(data_window_distance[:,1:])
+            data_window_distance = data_window_distance / np.max(data_window_distance)
+
+            # print(data_window_distance)
 
             # DTW
+            # dtw_classifier(data_window_distance)
 
-
-            dtw_train_csv = list(csv.reader(open('/home/aimove/Desktop/AIMove AGV Project/AIMove-AGV-Project/dtw_data.csv')))
-            dtw_train_data = []
-            for row in dtw_train_csv:
-                nwrow = []
-                for r in row:
-                    nwrow.append(eval(r))
-                dtw_train_data.append(nwrow)
-            dtw_train_data = np.array(dtw_train_data)
-            dist = np.empty(7)
-            for i in range(7):
-                dist[i] = dtw(np.array(dtw_train_data[i]), data_window_distance)
-            dtw_pred = np.argmin(dist)
-
-            gesture_index= ["1_START", "2_RIGHT","3_LEFT", "4_SPEED-DOWN", "5_SPEED-UP", "6_CONFIRMATION", "7_STOP"]
-            print(gesture_index[dtw_pred])
+            # HMM
+            hmm_classifier(data_window_distance)
 
             # Update variable iteration of frames
-            frame_iter = max_frame_iter - 1
+            frame_iter = max_frame_iter - frame_slide
+
             # Delete first keypoints (first frame of the dataframe)
-            data_window = data_window[1:, :, :]
+            data_window = data_window[frame_slide:, :, :]
 
 
 finally:
