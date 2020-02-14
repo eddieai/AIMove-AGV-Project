@@ -62,7 +62,7 @@ data_window = np.zeros((0, 7, 4))
 # Number of time lenght (defined pas fps)
 max_frame_iter = 90
 # Number of frame slider
-frame_slide = 45
+frame_slide = 5
 
 plt.ion()
 fig = plt.figure()
@@ -115,13 +115,18 @@ def hmm_classifier(data_window_distance):
         except:
             score[k] = -99999
 
-    predict_idx = np.argmax(score) + 1
+    predict_idx = np.argmax(score)    # the same index of predict idx and gesture index
     predict = gesture_index[predict_idx]
 
+    score_scaled = np.interp(score, (score.min(), score.max()), (0,10))
     end_time = time()
 
-    print(score)
-    print(predict)
+    if max(score) > -9999999:
+        #print('score: ', score)
+        # print('log_Likelihood to prob: ', score_scaled / score_scaled.sum())
+        # print('log_to_exp: ', np.exp(score_scaled))
+        # print('log_to_exp to prob: ', 1*np.exp(score_scaled)/(np.exp(score_scaled).sum()))
+        print(predict)
 
     return
 
@@ -150,11 +155,11 @@ try:
         depth_image = np.asanyarray(aligned_depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
 
-        plt.clf()
-        plt.subplot(2, 1, 1)
-        plt.imshow(color_image)
-        plt.subplot(2, 1, 2)
-        plt.imshow(depth_image)
+        # plt.clf()
+        # plt.subplot(2, 1, 1)
+        # plt.imshow(color_image)
+        # plt.subplot(2, 1, 2)
+        # plt.imshow(depth_image)
 
         # Convert depth_image to normalized depth information
         depthImg = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
@@ -257,6 +262,8 @@ try:
             # Delete first keypoints (first frame of the dataframe)
             data_window = data_window[frame_slide:, :, :]
 
+            # Print FPS
+            print("FPS: ", 1.0 / (time() - start_time))
 
 finally:
     # Stop streaming
