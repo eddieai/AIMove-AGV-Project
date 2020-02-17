@@ -40,16 +40,16 @@ opWrapper.configure(params)
 opWrapper.start()
 
 # List of Gestures
-gesture_index = ["1_START", "2_RIGHT", "3_LEFT", "4_SPEED-DOWN", "5_SPEED-UP", "6_CONFIRMATION", "7_STOP"]
+gesture_index = ["1_START", "2_RIGHT", "3_LEFT", "4_SPEED-DOWN", "5_SPEED-UP", "6_CONFIRMATION", "7_STOP", "8_NEUTRAL"]
 
 # Read HMM trained model parameters from JSON
-with open('hmm_jackknife_full_trained_param.json', 'r') as json_file:
+with open('hmm_8020_diag_trained_param.json', 'r') as json_file:
     trained_param = json.load(json_file)
 
 # Recover HMM models from HMM trained model parameters
 hmm_model = []
-for i in range(7):
-    hmm_model.append(hmm.GaussianHMM(n_components=3, covariance_type='full'))
+for i in range(8):
+    hmm_model.append(hmm.GaussianHMM(n_components=5, covariance_type='full'))
     hmm_model[-1].startprob_ = np.array(trained_param['startprob'][i])
     hmm_model[-1].transmat_ = np.array(trained_param['transmat'][i])
     hmm_model[-1].means_ = np.array(trained_param['means'][i])
@@ -60,9 +60,9 @@ for i in range(7):
 data_window = np.zeros((0, 7, 4))
 
 # Number of time lenght (defined pas fps)
-max_frame_iter = 90
+max_frame_iter = 60
 # Number of frame slider
-frame_slide = 5
+frame_slide = 10
 
 plt.ion()
 fig = plt.figure()
@@ -95,8 +95,9 @@ def dtw_classifier(data_window_distance):
             nwrow.append(eval(r))
         dtw_train_data.append(nwrow)
     dtw_train_data = np.array(dtw_train_data)
-    dist = np.empty(7)
-    for i in range(7):
+    print(dtw_train_data.shape)
+    dist = np.empty(8)
+    for i in range(8):
         dist[i] = dtw(np.array(dtw_train_data[i]), data_window_distance)
     dtw_pred = np.argmin(dist)
 
@@ -108,8 +109,8 @@ def hmm_classifier(data_window_distance):
 
     start_time = time()
 
-    score = np.empty(7)
-    for k in range(7):
+    score = np.empty(8)
+    for k in range(8):
         try:
             score[k] = hmm_model[k].score(data_window_distance, lengths=[len(data_window_distance)])
         except:
@@ -122,7 +123,7 @@ def hmm_classifier(data_window_distance):
     end_time = time()
 
     if max(score) > -9999999:
-        #print('score: ', score)
+        print('score: ', score)
         # print('log_Likelihood to prob: ', score_scaled / score_scaled.sum())
         # print('log_to_exp: ', np.exp(score_scaled))
         # print('log_to_exp to prob: ', 1*np.exp(score_scaled)/(np.exp(score_scaled).sum()))
@@ -251,10 +252,10 @@ try:
             # print(data_window_distance)
 
             # DTW
-            # dtw_classifier(data_window_distance)
+            dtw_classifier(data_window_distance)
 
             # HMM
-            hmm_classifier(data_window_distance)
+            # hmm_classifier(data_window_distance)
 
             # Update variable iteration of frames
             frame_iter = max_frame_iter - frame_slide
