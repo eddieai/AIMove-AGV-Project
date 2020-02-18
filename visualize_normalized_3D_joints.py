@@ -9,9 +9,9 @@ ax = fig.add_subplot(111, projection='3d')
 ax.set_facecolor('black')
 
 
-gesture, folder = 5, 1
+gesture, folder = 6, 9
 
-Keypoints_1_7_normalized = pd.read_json('Keypoints_1_7_normalized.json', orient='records')
+Keypoints_1_7_normalized = pd.read_json('Keypoints_1_8_normalized_New.json', orient='records')
 frame_max = Keypoints_1_7_normalized.pivot_table(index=['Gesture', 'Sub folder No.'], values=['Frame No.'], aggfunc=max).loc[gesture, folder][0]
 
 
@@ -23,10 +23,16 @@ def display_3D_keypoints(gesture, folder, frame):
 
     ax.plot(joints.iloc[order]['X'], joints.iloc[order]['Y'], joints.iloc[order]['Depth'], c='w', linestyle='-', linewidth=2, alpha=0.5)
     scatter = ax.scatter(joints.iloc[0:7]['X'], joints.iloc[0:7]['Y'], joints.iloc[0:7]['Depth'], c=range(1,8), cmap='Set1', marker='o', s=40, alpha=1)
+    plt.xlim(0,1)
+    plt.ylim(0,1)
+    ax.set_zlim(0,1)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
     legend1 = ax.legend(*scatter.legend_elements(), title="Joint")
     ax.add_artist(legend1)
 
-    plt.waitforbuttonpress(0.1)
+    plt.waitforbuttonpress(0.5)
     plt.show()
 
 

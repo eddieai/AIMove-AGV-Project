@@ -16,7 +16,7 @@ opWrapper.configure(params)
 opWrapper.start()
 
 # Gesture folder loacation
-folderLocation = '/home/paperspace/Desktop/recording_png/hello/'
+folderLocation = '/home/aimove/Desktop/AIMove AGV Project/dataset/NEW_2_restructred/8 - NEUTRAL/'
 gesture = folderLocation[folderLocation[:-1].rfind('/')+1:-1]
 # Sub folder number starts at
 foldNum_start = 1
