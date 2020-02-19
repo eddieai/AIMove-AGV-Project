@@ -47,10 +47,10 @@ with open('hmm_jackknife_full_trained_param.json', 'r') as json_file:
     trained_param = json.load(json_file)
 
 # Recover HMM models from HMM trained model parameters
-state = 1
+state = 3
 
 hmm_model = []
-for i in range(8):
+for i in range(len(gesture_index)):
     hmm_model.append(hmm.GaussianHMM(n_components=state, covariance_type='full'))
     hmm_model[-1].startprob_ = np.array(trained_param['startprob'][i])
     hmm_model[-1].transmat_ = np.array(trained_param['transmat'][i])
@@ -254,10 +254,10 @@ try:
             # print(data_window_distance)
 
             # DTW
-            # dtw_classifier(data_window_distance)
+            dtw_classifier(data_window_distance)
 
             # HMM
-            hmm_classifier(data_window_distance)
+            # hmm_classifier(data_window_distance)
 
             # Update variable iteration of frames
             frame_iter = max_frame_iter - frame_slide
