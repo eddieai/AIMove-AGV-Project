@@ -15,8 +15,8 @@ from time import time
 from itertools import combinations
 import warnings
 from initialize_OP import *
-
 warnings.filterwarnings("ignore")
+
 
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -42,21 +42,47 @@ opWrapper.start()
 gesture_index = ["1_HELLO", "2_LEFT", "3_RIGHT", "4_SPEED-DOWN", "5_SPEED-UP", "6_STOP", "7_CONFIRMATION", "8_NEUTRAL"]
 
 
+# HMM Initialization
+# Recover HMM models from HMM trained model parameters
+state = 1
+covar_type = 'full'
+
 # Read HMM trained model parameters from JSON
-with open('hmm_jackknife_full_trained_param.json', 'r') as json_file:
+with open('hmm_' + str(state) + '_jackknife_' + covar_type + '_trained_param.json', 'r') as json_file:
     trained_param = json.load(json_file)
 
-# Recover HMM models from HMM trained model parameters
-state = 3
 
+def diag_covars_3Dto2D(covars_3D):
+    covars_2D = np.empty((state, 21))
+    for i in range(state):
+        covars_2D[i] = np.diag(covars_3D[i]).reshape(1, 21)
+    return covars_2D
+
+# Train HMM models using parameters
 hmm_model = []
 for i in range(len(gesture_index)):
-    hmm_model.append(hmm.GaussianHMM(n_components=state, covariance_type='full'))
+    hmm_model.append(hmm.GaussianHMM(n_components=state, covariance_type=covar_type))
     hmm_model[-1].startprob_ = np.array(trained_param['startprob'][i])
     hmm_model[-1].transmat_ = np.array(trained_param['transmat'][i])
     hmm_model[-1].means_ = np.array(trained_param['means'][i])
-    hmm_model[-1].covars_ = np.array(trained_param['covars'][i])
+    if covar_type == 'diag':
+        hmm_model[-1].covars_ = diag_covars_3Dto2D(np.array(trained_param['covars'][i]))
+    elif covar_type == 'full':
+        hmm_model[-1].covars_ = np.array(trained_param['covars'][i])
     hmm_model[-1].n_features = 21
+
+
+# DTW initialization
+dtw_train_csv = list(csv.reader(open('/home/aimove/Desktop/AIMove AGV Project/AIMove-AGV-Project/dtw_data.csv')))
+dtw_train_data = []
+for row in dtw_train_csv:
+    nwrow = []
+    for r in row:
+        nwrow.append(eval(r))
+    dtw_train_data.append(nwrow)
+dtw_train_data = np.array(dtw_train_data)
+print(dtw_train_data.shape)
+
 
 # Initialize numpy matrix of result
 data_window = np.zeros((0, 7, 4))
@@ -88,50 +114,37 @@ def depth_cleaned(data_window, iter = 1):
 
 
 def dtw_classifier(data_window_distance):
-
-    dtw_train_csv = list(csv.reader(open('/home/aimove/Desktop/AIMove AGV Project/AIMove-AGV-Project/dtw_data.csv')))
-    dtw_train_data = []
-    for row in dtw_train_csv:
-        nwrow = []
-        for r in row:
-            nwrow.append(eval(r))
-        dtw_train_data.append(nwrow)
-    dtw_train_data = np.array(dtw_train_data)
-    print(dtw_train_data.shape)
     dist = np.empty(8)
     for i in range(8):
         dist[i] = dtw(np.array(dtw_train_data[i]), data_window_distance)
-    dtw_pred = np.argmin(dist)
 
-    print(gesture_index[dtw_pred])
-    return ()
+    predict_idx = np.argmin(dist)
+    predict = gesture_index[predict_idx]
+
+    return predict
 
 
 def hmm_classifier(data_window_distance):
-
-    start_time = time()
-
+    # start_time = time()
     score = np.empty(8)
     for k in range(8):
         try:
             score[k] = hmm_model[k].score(data_window_distance, lengths=[len(data_window_distance)])
         except:
-            score[k] = -99999
+            score[k] = -9999999
 
     predict_idx = np.argmax(score)    # the same index of predict idx and gesture index
     predict = gesture_index[predict_idx]
 
-    score_scaled = np.interp(score, (score.min(), score.max()), (0,10))
-    end_time = time()
+    # score_scaled = np.interp(score, (score.min(), score.max()), (0,10))
+    # end_time = time()
 
-    if max(score) > -9999999:
-        print('score: ', score)
-        # print('log_Likelihood to prob: ', score_scaled / score_scaled.sum())
-        # print('log_to_exp: ', np.exp(score_scaled))
-        # print('log_to_exp to prob: ', 1*np.exp(score_scaled)/(np.exp(score_scaled).sum()))
-        print(predict)
+    # print('log_Likelihood to prob: ', score_scaled / score_scaled.sum())
+    # print('log_to_exp: ', np.exp(score_scaled))
+    # print('log_to_exp to prob: ', 1*np.exp(score_scaled)/(np.exp(score_scaled).sum()))
 
-    return
+    return predict
+
 
 try:
     # Initialize variable iteration of frames
@@ -144,6 +157,10 @@ try:
         # Wait for a coherent pair of frames: depth and color
         frames = pipeline.wait_for_frames()
         aligned_frames = align.process(frames)
+
+        # aligned_depth_frame = aligned_frames.get_fig.enable_stream(rs.stream.depth, max_image_X, max_image_Y, rs.format.z16, 15)
+        # config.enable_stream(rs.stream.color, max_imagdepth_frame())
+        # color_frame = aligned_frames.get_color_frame()
 
         aligned_depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
@@ -230,7 +247,7 @@ try:
             # print('data window shape:', data_window.shape)
             end_time = time()
             run_time = end_time - start_time
-            print('run time', run_time)
+            # print('run time', run_time)
 
             data_window = depth_cleaned(data_window, iter=5)
             # data_window_distance = np.empty([max_frame_iter,1])
@@ -251,13 +268,20 @@ try:
             # data_window_distance = data_window_distance[:,1:] / np.max(data_window_distance[:,1:])
             data_window_distance = data_window_distance / np.max(data_window_distance)
 
-            # print(data_window_distance)
-
             # DTW
-            dtw_classifier(data_window_distance)
+            dtw_predict = dtw_classifier(data_window_distance)
+            # print('DTW = ', dtw_predict)
 
             # HMM
-            # hmm_classifier(data_window_distance)
+            hmm_predict = hmm_classifier(data_window_distance)
+            # print('HMM = ', hmm_predict)
+
+            # gesture_index = ["1_HELLO", "2_LEFT", "3_RIGHT", "4_SPEED-DOWN", "5_SPEED-UP", "6_STOP", "7_CONFIRMATION", "8_NEUTRAL"]
+            if hmm_predict == "2_LEFT" or hmm_predict ==  "3_RIGHT" or hmm_predict ==  "7_CONFIRMATION":
+                predict = hmm_predict
+            else:
+                predict = dtw_predict
+            print('Final = ', predict)
 
             # Update variable iteration of frames
             frame_iter = max_frame_iter - frame_slide
@@ -266,7 +290,7 @@ try:
             data_window = data_window[frame_slide:, :, :]
 
             # Print FPS
-            print("FPS: ", 1.0 / (time() - start_time))
+            # print("FPS: ", 1.0 / (time() - start_time))
 
 finally:
     # Stop streaming
