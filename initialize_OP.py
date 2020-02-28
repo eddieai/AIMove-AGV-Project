@@ -24,7 +24,7 @@ except ImportError as e:
 
 # Flags
 parser = argparse.ArgumentParser()
-parser.add_argument("--no_display", default=True, help="Enable to disable the visual display.")
+parser.add_argument("--no_display", default=False, help="Enable to disable the visual display.")
 parser.add_argument("--profile_speed", default=False, help="Enable to disable the visual display.")
 args = parser.parse_known_args()
 

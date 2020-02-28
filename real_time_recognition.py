@@ -90,10 +90,10 @@ data_window = np.zeros((0, 7, 4))
 # Number of time lenght (defined pas fps)
 max_frame_iter = 60
 # Number of frame slider
-frame_slide = 15
+frame_slide = 10
 
-plt.ion()
-fig = plt.figure()
+# plt.ion()
+# fig = plt.figure()
 
 
 def depth_cleaned(data_window, iter = 1):
@@ -145,12 +145,34 @@ def hmm_classifier(data_window_distance):
 
     return predict
 
+decision = 'No decision made'
+counter = np.zeros((7))
+def make_decision(predict):
+    global counter, decision
 
-try:
-    # Initialize variable iteration of frames
-    frame_iter = 0
+    if np.sum(counter) >= 7:
+        predict_max_idx = np.argmax(counter)
+        decision = gesture_index[predict_max_idx]
+        print('Decision = ', decision)
 
-    while True:
+    if predict == '8_NEUTRAL':
+        # predict_max_idx = np.argmax(counter)
+        # if counter[predict_max_idx] > 2:
+        #     decision = gesture_index[predict_max_idx]
+        #     print('Decision = ', decision)
+        counter = np.zeros((7))
+
+    else:
+        predict_index = gesture_index.index(predict)
+        counter[predict_index] += 1
+        # decision = 'No decision made'
+
+
+# Initialize variable iteration of frames
+frame_iter = 0
+
+while True:
+    try:
 
         start_time = time()
 
@@ -204,10 +226,13 @@ try:
         Probability = np.empty((0))
 
         data_joint = np.empty((0, 4))
+
+
         for joint in range(1, 8):
             x = opData[0][joint][0].item()
             y = opData[0][joint][1].item()
             probability = opData[0][joint][2].item()
+
             depth = img_depth[min(color_image.shape[0] - 1, round(y)), min(color_image.shape[1] - 1, round(x))]
 
             X = np.append(X, min(img_depth.shape[1] - 1, round(x)))
@@ -217,6 +242,7 @@ try:
 
             data_keypoint = np.array([x / max_image_X, y / max_image_Y, probability, depth])
             data_joint = np.vstack((data_joint, data_keypoint))
+
 
         data_window = np.vstack((data_window, data_joint.reshape(1, 7, 4)))
 
@@ -235,7 +261,26 @@ try:
         # plt.show()
 
         if not args[0].no_display:
-            cv2.imshow("OpenPose 1.5.0 - Tutorial Python API", datum.cvOutputData)
+            # cv2.imshow("OpenPose 1.5.0 - Tutorial Python API", datum.cvOutputData)
+
+            # Window name in which image is displayed
+            window_name = 'Decision'
+            # font
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            # org
+            org = (50, 50)
+            # fontScale
+            fontScale = 1
+            # Blue color in BGR
+            color = (255, 0, 0)
+            # Line thickness of 2 px
+            thickness = 2
+            # Using cv2.putText() method
+            image = cv2.putText(datum.cvOutputData, decision, org, font,
+                                fontScale, color, thickness, cv2.LINE_AA)
+            # Displaying the image
+            cv2.imshow(window_name, image)
+
             key = cv2.waitKey(15)
             if key == 27: break
 
@@ -276,12 +321,13 @@ try:
             hmm_predict = hmm_classifier(data_window_distance)
             # print('HMM = ', hmm_predict)
 
-            # gesture_index = ["1_HELLO", "2_LEFT", "3_RIGHT", "4_SPEED-DOWN", "5_SPEED-UP", "6_STOP", "7_CONFIRMATION", "8_NEUTRAL"]
             if hmm_predict == "2_LEFT" or hmm_predict ==  "3_RIGHT" or hmm_predict ==  "7_CONFIRMATION":
                 predict = hmm_predict
             else:
                 predict = dtw_predict
-            print('Final = ', predict)
+            # print('Prediction = ', predict)
+
+            make_decision(predict)
 
             # Update variable iteration of frames
             frame_iter = max_frame_iter - frame_slide
@@ -292,6 +338,9 @@ try:
             # Print FPS
             # print("FPS: ", 1.0 / (time() - start_time))
 
-finally:
-    # Stop streaming
-    pipeline.stop()
+    except IndexError:
+        print("Too close to realsense! Please retry")
+#
+# finally:
+#     # Stop streaming
+#     pipeline.stop()
