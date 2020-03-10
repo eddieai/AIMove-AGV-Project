@@ -16,7 +16,8 @@ from itertools import combinations
 import warnings
 from initialize_OP import *
 warnings.filterwarnings("ignore")
-
+plt.ion()
+fig = plt.figure(figsize=(10,5))
 
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -37,10 +38,8 @@ opWrapper = op.WrapperPython()
 opWrapper.configure(params)
 opWrapper.start()
 
-
 # List of Gestures
 gesture_index = ["1_HELLO", "2_LEFT", "3_RIGHT", "4_SPEED-DOWN", "5_SPEED-UP", "6_STOP", "7_CONFIRMATION", "8_NEUTRAL"]
-
 
 # HMM Initialization
 # Recover HMM models from HMM trained model parameters
@@ -73,7 +72,7 @@ for i in range(len(gesture_index)):
 
 
 # DTW initialization
-dtw_train_csv = list(csv.reader(open('/home/aimove/Desktop/AIMove AGV Project/AIMove-AGV-Project/dtw_data.csv')))
+dtw_train_csv = list(csv.reader(open('dtw_data.csv')))
 dtw_train_data = []
 for row in dtw_train_csv:
     nwrow = []
@@ -81,7 +80,6 @@ for row in dtw_train_csv:
         nwrow.append(eval(r))
     dtw_train_data.append(nwrow)
 dtw_train_data = np.array(dtw_train_data)
-print(dtw_train_data.shape)
 
 
 # Initialize numpy matrix of result
@@ -91,9 +89,6 @@ data_window = np.zeros((0, 7, 4))
 max_frame_iter = 60
 # Number of frame slider
 frame_slide = 10
-
-# plt.ion()
-# fig = plt.figure()
 
 
 def depth_cleaned(data_window, iter = 1):
@@ -145,27 +140,46 @@ def hmm_classifier(data_window_distance):
 
     return predict
 
+
 decision = 'No decision made'
-counter = np.zeros((7))
-def make_decision(predict):
-    global counter, decision
+counter_prediction = np.zeros((7))
+counter_decision = 0
+def make_decision(prediction):
+    global counter_prediction, decision, counter_decision
 
-    if np.sum(counter) >= 7:
-        predict_max_idx = np.argmax(counter)
-        decision = gesture_index[predict_max_idx]
-        print('Decision = ', decision)
-
-    if predict == '8_NEUTRAL':
-        # predict_max_idx = np.argmax(counter)
-        # if counter[predict_max_idx] > 2:
-        #     decision = gesture_index[predict_max_idx]
-        #     print('Decision = ', decision)
-        counter = np.zeros((7))
-
+    if prediction == '8_NEUTRAL':
+        counter_prediction = np.zeros((7))
+        percent_prediction = np.zeros((7))
+        decision = 'No decision made'
     else:
-        predict_index = gesture_index.index(predict)
-        counter[predict_index] += 1
-        # decision = 'No decision made'
+        predict_index = gesture_index.index(prediction)
+        counter_prediction[predict_index] += 1
+        percent_prediction = counter_prediction / np.sum(counter_prediction)
+
+    if np.sum(counter_prediction) >= 5 and np.max(percent_prediction)>=0.7:
+        predict_max_idx = np.argmax(counter_prediction)
+
+        if decision == gesture_index[predict_max_idx]:
+            counter_decision += 1
+        else:
+            counter_decision = 0
+
+        if counter_decision > 10:
+            decision = ''
+        else:
+            decision = gesture_index[predict_max_idx]
+    else:
+        decision = ''
+        # percent_prediction = np.zeros((7))
+
+    print(decision)
+    plt.clf()
+    plt.bar(np.arange(7), percent_prediction, tick_label=gesture_index[:-1], color='rgbkymc', alpha=0.5)
+    plt.title('Real-time prediction likelihood for intention analysis')
+    plt.ylim(0,1)
+    plt.show()
+    plt.pause(0.0001)
+    return decision
 
 
 # Initialize variable iteration of frames
@@ -173,7 +187,6 @@ frame_iter = 0
 
 while True:
     try:
-
         start_time = time()
 
         # Wait for a coherent pair of frames: depth and color
@@ -260,38 +273,12 @@ while True:
         # plt.waitforbuttonpress(0.0001)
         # plt.show()
 
-        if not args[0].no_display:
-            # cv2.imshow("OpenPose 1.5.0 - Tutorial Python API", datum.cvOutputData)
-
-            # Window name in which image is displayed
-            window_name = 'Decision'
-            # font
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            # org
-            org = (50, 50)
-            # fontScale
-            fontScale = 1
-            # Blue color in BGR
-            color = (255, 0, 0)
-            # Line thickness of 2 px
-            thickness = 2
-            # Using cv2.putText() method
-            image = cv2.putText(datum.cvOutputData, decision, org, font,
-                                fontScale, color, thickness, cv2.LINE_AA)
-            # Displaying the image
-            cv2.imshow(window_name, image)
-
-            key = cv2.waitKey(15)
-            if key == 27: break
-
         frame_iter = frame_iter + 1
         # print('frame_iter :', frame_iter, '\tn_frame :', n_frame)
 
         if frame_iter == max_frame_iter:
             # Create DataFrame of keypoints
             # print('data window shape:', data_window.shape)
-            end_time = time()
-            run_time = end_time - start_time
             # print('run time', run_time)
 
             data_window = depth_cleaned(data_window, iter=5)
@@ -335,12 +322,37 @@ while True:
             # Delete first keypoints (first frame of the dataframe)
             data_window = data_window[frame_slide:, :, :]
 
-            # Print FPS
-            # print("FPS: ", 1.0 / (time() - start_time))
+        end_time = time()
+        fps = 1.0 / (end_time - start_time)
+
+        if not args[0].no_display:
+            # cv2.imshow("OpenPose 1.5.0 - Tutorial Python API", datum.cvOutputData)
+
+            # Window name in which image is displayed
+            window_name = 'Decision'
+            # font
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            # fontScale
+            fontScale = 1
+            # Blue color in BGR
+            color = (255, 0, 0)
+            # Line thickness of 2 px
+            thickness = 2
+            # Using cv2.putText() method
+            image = cv2.putText(datum.cvOutputData, decision, (50, 50), font,
+                                fontScale, color, thickness, cv2.LINE_AA)
+            image = cv2.putText(image, 'FPS=%.2f' % fps, (50, 450), font,
+                                0.5, (0,255,0), 1, cv2.LINE_AA)
+            # Displaying the image
+            image = cv2.resize(image, (int(640*1.5), int(480*1.5)))
+            cv2.imshow(window_name, image)
+
+            key = cv2.waitKey(15)
+            if key == 27: break
+
 
     except IndexError:
         print("Too close to realsense! Please retry")
-#
-# finally:
-#     # Stop streaming
-#     pipeline.stop()
+        counter_prediction = np.zeros((7))
+        percent_prediction = np.zeros((7))
+        decision = 'Too close to realsense!'
